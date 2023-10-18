@@ -30,6 +30,10 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db!!.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         onCreate(db)
     }
+    fun getAllCustomers(): Cursor? {
+        val db = this.readableDatabase
+        return db.rawQuery("SELECT * FROM $TABLE_NAME", null)
+    }
 
     fun addCustomer(name: String, email: String, mobile: String) {
         val values = ContentValues()
@@ -47,39 +51,48 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
         db.close()
     }
 
-    fun getAllCustomers(): Cursor? {
+    fun searchCustomer(name: String): Cursor? {
         val db = this.readableDatabase
-        return db.rawQuery("SELECT * FROM $TABLE_NAME", null)
-    }
+        return db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $NAME=\"$name\"", null)
 
-    fun deleteCustomer(id: Int) {
-        val searchParameter = arrayOf(id.toString())
+    }
+    fun deleteCustomer(id: String): Int {
+
         val db = this.writableDatabase
+        var deletedRows = 0
         db.beginTransaction()
         try {
-            db.delete(TABLE_NAME, "Id=?", searchParameter)
+            deletedRows = db.delete(TABLE_NAME, "$ID=?", arrayOf(id))
             db.setTransactionSuccessful()
         }finally {
             db.endTransaction()
         }
         db.close()
+        return deletedRows
     }
 
-    fun updateCustomer(id: Int, name: String, email: String, mobile: String) {
+    fun updateCustomer(id: String, name: String, email: String, mobile: String): Int {
         val db = writableDatabase
         val values = ContentValues()
-        val searchParameter = arrayOf(id.toString())
+        var rows = 0
         db.beginTransaction()
         try {
             values.put(NAME, name)
             values.put(EMAIL, email)
             values.put(MOBILE, mobile)
-            db.update(TABLE_NAME, values, "Id=?", searchParameter)
+            rows = db.update(TABLE_NAME, values, "Id=?", arrayOf(id))
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
         }
         db.close()
+        return rows
+    }
+
+    fun checkNumberOfRecords(): Cursor? {
+        val db = readableDatabase
+        val records = db.rawQuery("SELECT COUNT(*) FROM $TABLE_NAME",null)
+        return  records
     }
 
     fun resetDB() {
