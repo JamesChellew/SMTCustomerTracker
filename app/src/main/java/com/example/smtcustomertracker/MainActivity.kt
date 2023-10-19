@@ -57,6 +57,12 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton("Search") { dialog, which ->
                     val etSearchName = alertDialogView.findViewById<EditText>(R.id.editTextName)
                     val searchName = etSearchName.text.toString()
+
+                    if (searchName == ""){
+                        Snackbar.make(it, "Please enter a search term", Snackbar.LENGTH_LONG).show()
+                        return@setPositiveButton
+                    }
+
                     val cursor = db.searchCustomer(searchName)
                     var searchResults = ""
                     while (cursor!!.moveToNext()) {
@@ -65,8 +71,20 @@ class MainActivity : AppCompatActivity() {
                                 "${cursor.getString(2)} | " +
                                 "${cursor.getString(3)}\n"
                     }
-                    Snackbar.make(it, "Matching Entries:\n$searchResults", Snackbar.LENGTH_LONG)
-                        .show()
+                    if (searchResults != "") {
+                        // Generates a dialog to display search results
+                        val resultsDialogBuilder = AlertDialog.Builder(this)
+                        val resultsDialogView =
+                            this.layoutInflater.inflate(R.layout.search_results_dialog, null)
+                        var tvResults =
+                            resultsDialogView.findViewById<TextView>(R.id.textViewSearchResults)
+                        tvResults.append(searchResults)
+                        resultsDialogBuilder.setView(resultsDialogView)
+                            .setTitle("Search Results")
+                            .show()
+                    } else {
+                        Snackbar.make(it, "No results found", Snackbar.LENGTH_LONG).show()
+                    }
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
@@ -80,58 +98,25 @@ class MainActivity : AppCompatActivity() {
             dialogBuilder.setMessage("Enter ID to delete")
             dialogBuilder.setView(dialogView)
 
-            dialogBuilder.setPositiveButton("Confirm",
-                DialogInterface.OnClickListener { dialog, which ->
-                    val etDelete = dialogView.findViewById<EditText>(R.id.editTextDelete)
-                    val deleteId = etDelete.text.toString()
-                    val rows = db.deleteCustomer(deleteId)
-                    displayCustomers()
-                    if (rows <= 0) {
-                        Toast.makeText(this, "Please enter a valid ID", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this, "ID: $deleteId Deleted", Toast.LENGTH_SHORT).show()
-                    }
-                })
+            dialogBuilder.setPositiveButton("Confirm") { dialog, which ->
+                val etDelete = dialogView.findViewById<EditText>(R.id.editTextDelete)
+                val deleteId = etDelete.text.toString()
+                val rows = db.deleteCustomer(deleteId)
+                displayCustomers()
+                if (rows <= 0) {
+                    Toast.makeText(this, "Please enter a valid ID", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this, "ID: $deleteId Deleted", Toast.LENGTH_SHORT).show()
+                }
+            }
             dialogBuilder.setNegativeButton("Cancel", null)
             dialogBuilder.setIcon(android.R.drawable.ic_dialog_alert)
             dialogBuilder.show()
         }
-
         // shows dialog that allows customer information to be edited at specified ID
         btnUpdate.setOnClickListener {
-            val db = DBHelper(this, null)
-            val dialogBuilder = AlertDialog.Builder(this)
-            val dialogView = this.layoutInflater.inflate(R.layout.update_dialog, null)
-
-            dialogBuilder
-                .setTitle("Edit Customer")
-                .setMessage("Enter the ID of the customer you would like to edit")
-                .setView(dialogView)
-                .setPositiveButton("Update", DialogInterface.OnClickListener { dialog, which ->
-                    val db = DBHelper(this, null)
-
-                    val etUpdateId = dialogView.findViewById<EditText>(R.id.editTextId)
-                    val etUpdateName = dialogView.findViewById<EditText>(R.id.editTextName)
-                    val etUpdateEmail = dialogView.findViewById<EditText>(R.id.editTextEmail)
-                    val etUpdateMobile = dialogView.findViewById<EditText>(R.id.editTextMobile)
-
-                    val updateId = etUpdateId.text.toString()
-                    val updateName = etUpdateName.text.toString()
-                    val updateEmail = etUpdateEmail.text.toString()
-                    val updateMobile = etUpdateMobile.text.toString()
-
-                    val rows = db.updateCustomer(updateId, updateName, updateEmail, updateMobile)
-                    if (rows == 0) {
-                        Toast.makeText(this, "Please enter a valid Id", Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this, "Customer details updated", Toast.LENGTH_SHORT).show()
-                    }
-                    displayCustomers()
-                })
-                .setNegativeButton("Cancel", null)
-                .show()
+            updateDialog()
         }
-
         // Drops then remakes the database. Can only be executed if no. of records exceeds 5
         // SQL rawQuery returns a single column with a single record, the count of records
         // Uses Cursor to read that number and check if the no of records exceeds 5
@@ -141,16 +126,20 @@ class MainActivity : AppCompatActivity() {
             var counter = 0
             cursor!!.moveToNext()
             counter = cursor.getInt(0)
-            if (counter < 5){
-                Toast.makeText(this, "$counter Add more records before resetting", Toast.LENGTH_SHORT).show()
-            }
-            else{
+            if (counter < 5) {
+                Toast.makeText(
+                    this,
+                    "$counter Add more records before resetting",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
                 db.resetDB()
                 displayCustomers()
                 Toast.makeText(this, "$counter Database Reset", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     private fun displayCustomers() {
         // Uses the Cursor to read each column of the record and appends the info to the TextView
         val tvRecord = findViewById<TextView>(R.id.textViewScoreRecord)
@@ -166,5 +155,49 @@ class MainActivity : AppCompatActivity() {
                         "${cursor.getString(3)}\n"
             )
         }
+    }
+
+    private fun updateDialog() {
+        val dialogBuilder = AlertDialog.Builder(this)
+        val dialogView = this.layoutInflater.inflate(R.layout.update_dialog, null)
+
+        dialogBuilder
+            .setTitle("Edit Customer")
+            .setMessage("Enter the ID of the customer you would like to edit")
+            .setView(dialogView)
+            .setPositiveButton("Update") { dialog, which ->
+                val db = DBHelper(this, null)
+
+                val etUpdateId = dialogView.findViewById<EditText>(R.id.editTextId)
+                val etUpdateName = dialogView.findViewById<EditText>(R.id.editTextName)
+                val etUpdateEmail = dialogView.findViewById<EditText>(R.id.editTextEmail)
+                val etUpdateMobile = dialogView.findViewById<EditText>(R.id.editTextMobile)
+
+                val updateId = etUpdateId.text.toString()
+                val updateName = etUpdateName.text.toString()
+                val updateEmail = etUpdateEmail.text.toString()
+                val updateMobile = etUpdateMobile.text.toString()
+
+                if (updateId != "" && updateName != "" && updateEmail != "" && updateMobile != "") {
+                    val rows = db.updateCustomer(updateId, updateName, updateEmail, updateMobile)
+                    if (rows == 0) {
+                        Toast.makeText(this, "Please enter a valid Id", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this, "Customer details updated", Toast.LENGTH_SHORT).show()
+                    }
+                    displayCustomers()
+                } else {
+                    val snackBarRetry = Snackbar.make(
+                        findViewById(R.id.main),
+                        "Please enter all fields",
+                        Snackbar.LENGTH_LONG
+                    )
+                    snackBarRetry.setAction("Retry") {
+                        updateDialog() // Recalls the dialog to try again.
+                    }.show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }

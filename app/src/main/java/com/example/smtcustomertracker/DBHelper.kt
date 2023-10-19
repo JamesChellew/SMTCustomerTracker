@@ -54,7 +54,6 @@ class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     fun searchCustomer(name: String): Cursor? {
         val db = this.readableDatabase
         return db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $NAME=\"$name\"", null)
-
     }
     fun deleteCustomer(id: String): Int {
 
