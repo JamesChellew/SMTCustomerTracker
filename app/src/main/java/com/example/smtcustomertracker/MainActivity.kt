@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 db.resetDB()
                 displayCustomers()
-                Toast.makeText(this, "$counter Database Reset", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Database Reset", Toast.LENGTH_SHORT).show()
             }
         }
     }
