@@ -57,12 +57,10 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton("Search") { dialog, which ->
                     val etSearchName = alertDialogView.findViewById<EditText>(R.id.editTextName)
                     val searchName = etSearchName.text.toString()
-
                     if (searchName == ""){
                         Snackbar.make(it, "Please enter a search term", Snackbar.LENGTH_LONG).show()
                         return@setPositiveButton
                     }
-
                     val cursor = db.searchCustomer(searchName)
                     var searchResults = ""
                     while (cursor!!.moveToNext()) {
@@ -93,11 +91,9 @@ class MainActivity : AppCompatActivity() {
         btnDelete.setOnClickListener {
             val dialogBuilder = AlertDialog.Builder(this)
             val dialogView = this.layoutInflater.inflate(R.layout.delete_dialog, null)
-
             dialogBuilder.setTitle("Delete Customer")
             dialogBuilder.setMessage("Enter ID to delete")
             dialogBuilder.setView(dialogView)
-
             dialogBuilder.setPositiveButton("Confirm") { dialog, which ->
                 val etDelete = dialogView.findViewById<EditText>(R.id.editTextDelete)
                 val deleteId = etDelete.text.toString()
@@ -139,13 +135,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun displayCustomers() {
         // Uses the Cursor to read each column of the record and appends the info to the TextView
         val tvRecord = findViewById<TextView>(R.id.textViewScoreRecord)
         val db = DBHelper(this, null)
         val cursor = db.getAllCustomers()
-
         tvRecord.text = "Customers:\nId | Name | Email | Mobile\n"
         while (cursor!!.moveToNext()) {
             tvRecord.append(
@@ -156,28 +150,23 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-
     private fun updateDialog() {
         val dialogBuilder = AlertDialog.Builder(this)
         val dialogView = this.layoutInflater.inflate(R.layout.update_dialog, null)
-
         dialogBuilder
             .setTitle("Edit Customer")
             .setMessage("Enter the ID of the customer you would like to edit")
             .setView(dialogView)
             .setPositiveButton("Update") { dialog, which ->
                 val db = DBHelper(this, null)
-
                 val etUpdateId = dialogView.findViewById<EditText>(R.id.editTextId)
                 val etUpdateName = dialogView.findViewById<EditText>(R.id.editTextName)
                 val etUpdateEmail = dialogView.findViewById<EditText>(R.id.editTextEmail)
                 val etUpdateMobile = dialogView.findViewById<EditText>(R.id.editTextMobile)
-
                 val updateId = etUpdateId.text.toString()
                 val updateName = etUpdateName.text.toString()
                 val updateEmail = etUpdateEmail.text.toString()
                 val updateMobile = etUpdateMobile.text.toString()
-
                 if (updateId != "" && updateName != "" && updateEmail != "" && updateMobile != "") {
                     val rows = db.updateCustomer(updateId, updateName, updateEmail, updateMobile)
                     if (rows == 0) {
